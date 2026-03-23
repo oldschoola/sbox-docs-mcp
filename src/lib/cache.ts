@@ -1,6 +1,7 @@
 interface CacheEntry<T> {
   value: T
   expiresAt: number
+  lastAccessed: number
 }
 
 export class Cache<T> {
@@ -14,17 +15,43 @@ export class Cache<T> {
   }
 
   get(key: string): T | undefined {
-    // TODO: lookup + expiration check
-    return undefined
+    const entry = this.store.get(key)
+    if (!entry) return undefined
+    if (Date.now() > entry.expiresAt) {
+      this.store.delete(key)
+      return undefined
+    }
+    entry.lastAccessed = Date.now()
+    return entry.value
   }
 
   set(key: string, value: T): void {
-    // TODO: insert + LRU eviction
+    if (this.store.size >= this.maxEntries && !this.store.has(key)) {
+      let oldestKey: string | undefined
+      let oldestTime = Infinity
+      for (const [k, v] of this.store) {
+        if (v.lastAccessed < oldestTime) {
+          oldestTime = v.lastAccessed
+          oldestKey = k
+        }
+      }
+      if (oldestKey) this.store.delete(oldestKey)
+    }
+    this.store.set(key, {
+      value,
+      expiresAt: Date.now() + this.ttlMs,
+      lastAccessed: Date.now(),
+    })
   }
 
   has(key: string): boolean {
-    // TODO: check existence + expiration
-    return false
+    const entry = this.store.get(key)
+    if (!entry) return false
+    if (Date.now() > entry.expiresAt) {
+      this.store.delete(key)
+      return false
+    }
+    return true
   }
 
   clear(): void {

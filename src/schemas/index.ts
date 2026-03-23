@@ -44,6 +44,12 @@ export const GetApiTypeInput = z.object({
     .describe('Include properties in output'),
 })
 
+export const SearchApiInput = z.object({
+  query: z.string().min(1).describe('Search terms for API types (e.g. "collider", "light", "physics")'),
+  limit: z.number().min(1).max(25).default(10).describe('Max results'),
+})
+
 export type SearchDocsParams = z.infer<typeof SearchDocsInput>
 export type GetPageParams = z.infer<typeof GetPageInput>
 export type GetApiTypeParams = z.infer<typeof GetApiTypeInput>
+export type SearchApiParams = z.infer<typeof SearchApiInput>

@@ -2,14 +2,20 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { SearchDocsInput, GetPageInput, GetApiTypeInput } from './schemas/index.js'
+import {
+  SearchDocsInput,
+  GetPageInput,
+  GetApiTypeInput,
+  SearchApiInput,
+} from './schemas/index.js'
 import { searchDocs } from './tools/search-docs.js'
 import { getPage } from './tools/get-page.js'
 import { getApiType } from './tools/get-api-type.js'
+import { searchApi } from './tools/search-api.js'
 
 const server = new McpServer({
   name: 'sbox-docs-mcp',
-  version: '0.1.0',
+  version: '0.2.0',
 })
 
 server.tool(
@@ -34,10 +40,20 @@ server.tool(
 
 server.tool(
   'sbox_api_get_type',
-  'Get API documentation for a specific s&box type, class, or struct. Returns properties, methods, and descriptions.',
+  'Get API documentation for a specific s&box type, class, or struct from sbox.game/api. Returns properties, methods, and descriptions. Use full type name (e.g. Sandbox.Component) or short name (e.g. Component).',
   GetApiTypeInput.shape,
   async (params) => {
     const text = await getApiType(params)
+    return { content: [{ type: 'text', text }] }
+  },
+)
+
+server.tool(
+  'sbox_api_search',
+  'Search s&box API types by name or description. Useful for discovering available classes, components, and structs. Returns type names with links to full docs.',
+  SearchApiInput.shape,
+  async (params) => {
+    const text = await searchApi(params)
     return { content: [{ type: 'text', text }] }
   },
 )
